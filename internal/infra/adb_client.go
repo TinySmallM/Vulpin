@@ -22,7 +22,7 @@ type ADBClient struct {
 // В будущем сюда можно будет добавить настройку пути к adb или таймаутов.
 func NewADBClient() *ADBClient {
 	return &ADBClient{
-		adbPath: "adb", // По умолчанию ищем adb в PATH системы
+		adbPath: `G:\LDPlayer\LDPlayer9\adb.exe`,
 	}
 }
 
