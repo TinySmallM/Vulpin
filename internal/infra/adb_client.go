@@ -7,10 +7,11 @@ import (
 	"strings"
 )
 
-// RawDevice - сырые данные, которые мы получили от ADB CLI.
-type RawDevice struct {
+// RawDevice - сырые данные, которые мы получили от ADB CLI API.
+type Device struct {
 	Serial string
 	Status string
+	Model  string
 }
 
 // ADBClient отвечает только за взаимодействие с системной утилитой adb.
@@ -19,25 +20,43 @@ type ADBClient struct {
 }
 
 // NewADBClient создает новый клиент.
-// В будущем сюда можно будет добавить настройку пути к adb или таймаутов.
 func NewADBClient() *ADBClient {
 	return &ADBClient{
 		adbPath: `G:\LDPlayer\LDPlayer9\adb.exe`,
 	}
 }
 
+// shellCommand - приватный хелпер для выполнения команд
+func (cli *ADBClient) shellCommand(serial, command string) (string, error) {
+	cmd := exec.Command(cli.adbPath, "-s", serial, "shell", command)
+	output, err := cmd.Output()
+
+	if err != nil {
+		return "", err // Возвращаем ошибку наверх
+	}
+	return strings.TrimSpace(string(output)), nil
+}
+
+// GetModel - получить модель устройства
+func (cli *ADBClient) GetModel(serial string) string {
+	model, err := cli.shellCommand(serial, "getprop ro.product.model")
+
+	if err != nil {
+		return "Unknown"
+	}
+	return model
+}
+
 // GetDevices выполняет команду "adb devices" и возвращает список сырых устройств.
-func (сlient *ADBClient) GetDevices() ([]RawDevice, error) {
-	// Выполняем команду
-	cmd := exec.Command(сlient.adbPath, "devices")
+func (cli *ADBClient) GetDevices() ([]Device, error) {
+	cmd := exec.Command(cli.adbPath, "devices")
 
 	output, err := cmd.Output()
 	if err != nil {
-		// Если команда вернула ошибку (например, adb не установлен или демон умер)
 		return nil, fmt.Errorf("failed to execute adb command: %w", err)
 	}
 
-	var devices []RawDevice
+	var devices []Device
 	scanner := bufio.NewScanner(strings.NewReader(string(output)))
 
 	for scanner.Scan() {
@@ -47,14 +66,12 @@ func (сlient *ADBClient) GetDevices() ([]RawDevice, error) {
 			continue
 		}
 
-		// strings.Fields разбивает строку по любым пробельным символам (пробелы, табы)
-		// Пример: "emulator-5554    device" -> ["emulator-5554", "device"]
 		parts := strings.Fields(line)
 		if len(parts) < 2 {
 			continue
 		}
 
-		devices = append(devices, RawDevice{
+		devices = append(devices, Device{
 			Serial: parts[0],
 			Status: parts[1],
 		})

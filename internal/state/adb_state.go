@@ -18,15 +18,13 @@ const (
 
 // ADBDevice - информация об Android устройстве
 type ADBDevice struct {
-	Serial       string       `json:"serial"`        // Серийный номер (уникальный ID)
-	Model        string       `json:"model"`         // Модель устройства
-	AndroidVer   string       `json:"android_ver"`   // Версия Android
-	Status       DeviceStatus `json:"status"`        // Статус подключения
-	LastSeen     time.Time    `json:"last_seen"`     // Последнее подключение
-	BatteryLevel int          `json:"battery_level"` // Уровень батареи (0-100)
+	Serial   string       `json:"serial"`    // Серийный номер (уникальный ID)
+	Model    string       `json:"model"`     // Модель устройства
+	Status   DeviceStatus `json:"status"`    // Статус подключения
+	LastSeen time.Time    `json:"last_seen"` // Последнее подключение
 }
 
-func (a *ADBDevice) String() string {
+func (d *ADBDevice) String() string {
 	panic("unimplemented")
 }
 
@@ -50,73 +48,73 @@ func NewADBMonitor() *ADBMonitor {
 // --- Методы для работы с устройствами ---
 
 // UpdateDevice - добавить или обновить устройство
-func (monitor *ADBMonitor) UpdateDevice(device *ADBDevice) {
-	monitor.devicesMu.Lock()
-	defer monitor.devicesMu.Unlock()
+func (mon *ADBMonitor) UpdateDevice(device *ADBDevice) {
+	mon.devicesMu.Lock()
+	defer mon.devicesMu.Unlock()
 
 	device.LastSeen = time.Now()
-	monitor.devices[device.Serial] = device
+	mon.devices[device.Serial] = device
 }
 
 // RemoveDevice - удалить устройство
-func (monitor *ADBMonitor) RemoveDevice(serial string) {
-	monitor.devicesMu.Lock()
-	defer monitor.devicesMu.Unlock()
+func (mon *ADBMonitor) RemoveDevice(serial string) {
+	mon.devicesMu.Lock()
+	defer mon.devicesMu.Unlock()
 
-	delete(monitor.devices, serial)
+	delete(mon.devices, serial)
 }
 
 // GetDevices - получить все устройства (копия)
-func (monitor *ADBMonitor) GetDevices() []*ADBDevice {
-	monitor.devicesMu.RLock()
-	defer monitor.devicesMu.RUnlock()
+func (mon *ADBMonitor) GetDevices() []*ADBDevice {
+	mon.devicesMu.RLock()
+	defer mon.devicesMu.RUnlock()
 
-	devices := make([]*ADBDevice, 0, len(monitor.devices))
-	for _, device := range monitor.devices {
+	devices := make([]*ADBDevice, 0, len(mon.devices))
+	for _, device := range mon.devices {
 		devices = append(devices, device)
 	}
 	return devices
 }
 
 // GetDevice - получить конкретное устройство
-func (monitor *ADBMonitor) GetDevice(serial string) *ADBDevice {
-	monitor.devicesMu.RLock()
-	defer monitor.devicesMu.RUnlock()
+func (mon *ADBMonitor) GetDevice(serial string) *ADBDevice {
+	mon.devicesMu.RLock()
+	defer mon.devicesMu.RUnlock()
 
-	return monitor.devices[serial]
+	return mon.devices[serial]
 }
 
 // SetScanning - установить статус сканирования
-func (monitor *ADBMonitor) SetScanning(scanning bool) {
-	monitor.devicesMu.Lock()
-	defer monitor.devicesMu.Unlock()
+func (mon *ADBMonitor) SetScanning(scanning bool) {
+	mon.devicesMu.Lock()
+	defer mon.devicesMu.Unlock()
 
-	monitor.isScanning = scanning
+	mon.isScanning = scanning
 	if scanning {
-		monitor.lastScan = time.Now()
+		mon.lastScan = time.Now()
 	}
 }
 
 // IsScanning - проверить, идет ли сканирование
-func (monitor *ADBMonitor) IsScanning() bool {
-	monitor.devicesMu.RLock()
-	defer monitor.devicesMu.RUnlock()
+func (mon *ADBMonitor) IsScanning() bool {
+	mon.devicesMu.RLock()
+	defer mon.devicesMu.RUnlock()
 
-	return monitor.isScanning
+	return mon.isScanning
 }
 
 // GetLastScan - получить время последнего сканирования
-func (monitor *ADBMonitor) GetLastScan() time.Time {
-	monitor.devicesMu.RLock()
-	defer monitor.devicesMu.RUnlock()
+func (mon *ADBMonitor) GetLastScan() time.Time {
+	mon.devicesMu.RLock()
+	defer mon.devicesMu.RUnlock()
 
-	return monitor.lastScan
+	return mon.lastScan
 }
 
 // ClearAll - очистить все устройства (для теста)
-func (monitor *ADBMonitor) ClearAll() {
-	monitor.devicesMu.Lock()
-	defer monitor.devicesMu.Unlock()
+func (mon *ADBMonitor) ClearAll() {
+	mon.devicesMu.Lock()
+	defer mon.devicesMu.Unlock()
 
-	monitor.devices = make(map[string]*ADBDevice)
+	mon.devices = make(map[string]*ADBDevice)
 }

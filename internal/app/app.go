@@ -28,25 +28,25 @@ func NewApp() *App {
 	}
 }
 
-func (k *App) GetMonitor() *state.ADBMonitor {
-	return k.monitor
+func (app *App) GetMonitor() *state.ADBMonitor {
+	return app.monitor
 }
 
-func (k *App) StartMonitoring() error {
+func (app *App) StartMonitoring() error {
 	fmt.Println("🚀 Запуск мониторинга...")
 
-	if err := k.adbService.ScanDevices(); err != nil {
+	if err := app.adbService.ScanDevices(); err != nil {
 		return fmt.Errorf("ошибка сканирования: %w", err)
 	}
 
-	k.adbService.StartPeriodicScan(5 * time.Second)
+	app.adbService.StartPeriodicScan(5 * time.Second)
 	fmt.Println("✅ Мониторинг запущен!")
 	return nil
 }
 
 // PrintDevices - выводит текущие устройства в консоль
-func (k *App) PrintDevices() {
-	devices := k.monitor.GetDevices()
+func (app *App) PrintDevices() {
+	devices := app.monitor.GetDevices()
 	fmt.Printf("\n📱 Найдено устройств: %d\n", len(devices))
 	for _, device := range devices {
 		helper.Inspect(device)

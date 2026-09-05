@@ -21,37 +21,40 @@ func NewADBService(client *infra.ADBClient, monitor *state.ADBMonitor) *ADBServi
 }
 
 // ScanDevices делает один проход: опрашивает ADB и обновляет стейт.
-func (k *ADBService) ScanDevices() error {
-	k.monitor.SetScanning(true)
-	defer k.monitor.SetScanning(false)
+func (ser *ADBService) ScanDevices() error {
+	ser.monitor.SetScanning(true)
+	defer ser.monitor.SetScanning(false)
 
-	// 1. Получаем сырые данные из инфры
-	rawDevices, err := k.client.GetDevices()
+	rawDevices, err := ser.client.GetDevices()
 	if err != nil {
 		return fmt.Errorf("infra scan failed: %w", err)
 	}
 
 	// 2. Маппим и кладем в стейт
 	for _, raw := range rawDevices {
+		// Берем серийник (raw.Serial) и спрашиваем у клиента модель
+		model := ser.client.GetModel(raw.Serial)
+
 		device := &state.ADBDevice{
 			Serial: raw.Serial,
 			Status: mapStatus(raw.Status),
-			Model:  "Unknown", // Пока заглушка, потом научимся тянуть через adb shell
+			Model:  model,
 		}
-		k.monitor.UpdateDevice(device)
+
+		ser.monitor.UpdateDevice(device)
 	}
 
 	return nil
 }
 
 // StartPeriodicScan запускает фоновый опрос в отдельной горутине.
-func (k *ADBService) StartPeriodicScan(interval time.Duration) {
+func (ser *ADBService) StartPeriodicScan(interval time.Duration) {
 	go func() {
 		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
 
 		for range ticker.C {
-			if err := k.ScanDevices(); err != nil {
+			if err := ser.ScanDevices(); err != nil {
 				fmt.Printf("⚠️ Ошибка сканирования: %v\n", err)
 			}
 		}
