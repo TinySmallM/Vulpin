@@ -26,6 +26,10 @@ type ADBDevice struct {
 	BatteryLevel int          `json:"battery_level"` // Уровень батареи (0-100)
 }
 
+func (a *ADBDevice) String() string {
+	panic("unimplemented")
+}
+
 // ADBMonitor - глобальное состояние ADB монитора
 type ADBMonitor struct {
 	// devicesMu защищает поля devices, isScanning и lastScan

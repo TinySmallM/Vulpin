@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/TinySmallM/vulpin/internal/helper"
 	"github.com/TinySmallM/vulpin/internal/infra"
 	"github.com/TinySmallM/vulpin/internal/service"
 	"github.com/TinySmallM/vulpin/internal/state"
@@ -48,6 +49,6 @@ func (k *App) PrintDevices() {
 	devices := k.monitor.GetDevices()
 	fmt.Printf("\n📱 Найдено устройств: %d\n", len(devices))
 	for _, device := range devices {
-		fmt.Printf("   • %s | Статус: %s\n", device.Serial, device.Status)
+		helper.Inspect(device)
 	}
 }
