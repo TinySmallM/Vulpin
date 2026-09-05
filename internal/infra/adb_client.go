@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os/exec"
-	"strconv"
 	"strings"
 )
 
@@ -23,47 +22,22 @@ type ADBClient struct {
 // NewADBClient создает новый клиент.
 func NewADBClient() *ADBClient {
 	return &ADBClient{
-		adbPath:       `G:\LDPlayer\LDPlayer9\adb.exe`,
-		ldConsolePath: `G:\LDPlayer\LDPlayer9\ldconsole.exe`, //Это путь к утилите LDPlayer9 для определение локальных имен.
+		adbPath: `G:\LDPlayer\LDPlayer9\adb.exe`,
 	}
 }
 
-// GetLDPlayerNames загружает список всех эмуляторов
-func (cli *ADBClient) GetLDPlayerNames() map[int]string {
-	names := make(map[int]string)
+// GetNameByMap получает имя по serial используя готовую мапу
+// func (cli *ADBClient) GetNameByMap(serial string, namesMap map[int]string) string {
+// 	port := extractPort(serial)
+// 	if port == 0 {
+// 		return ""
+// 	}
 
-	cmd := exec.Command(cli.ldConsolePath, "list")
-	output, err := cmd.Output()
-
-	if err != nil {
-		return names
-	}
-
-	scanner := bufio.NewScanner(strings.NewReader(string(output)))
-
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-
-		if line == "" {
-			continue
-		}
-
-		parts := strings.Fields(line)
-		if len(parts) < 3 {
-			continue
-		}
-
-		vmNumber, err := strconv.Atoi(parts[1])
-		if err != nil {
-			continue
-		}
-
-		name := strings.Join(parts[2:], " ")
-		names[vmNumber] = name
-	}
-
-	return names
-}
+// 	if name, exists := namesMap[port]; exists {
+// 		return name
+// 	}
+// 	return ""
+// }
 
 // GetModel - получить модель устройства
 func (cli *ADBClient) GetModel(serial string) string {
@@ -74,23 +48,6 @@ func (cli *ADBClient) GetModel(serial string) string {
 	}
 
 	return model
-}
-
-// GetNameByMap получает имя эмулятора по serial, используя заранее загруженную мапу.
-func (cli *ADBClient) GetNameByMap(serial string, namesMap map[int]string) string {
-	port := extractPort(serial)
-	if port == 0 {
-		return ""
-	}
-
-	// Формула LDPlayer: vmNumber = (port - 5554) / 2
-	vmNumber := (port - 5554) / 2
-
-	if name, exists := namesMap[vmNumber]; exists {
-		return name
-	}
-
-	return ""
 }
 
 // GetDevices выполняет команду "adb devices" и возвращает список сырых устройств.
@@ -129,18 +86,6 @@ func (cli *ADBClient) GetDevices() ([]Device, error) {
 	}
 
 	return devices, nil
-}
-
-// extractPort извлекает порт из serial
-func extractPort(serial string) int {
-	parts := strings.Split(serial, "-")
-
-	if len(parts) < 2 {
-		return 0
-	}
-
-	port, _ := strconv.Atoi(parts[1])
-	return port
 }
 
 // shellCommand - приватный хелпер для выполнения команд

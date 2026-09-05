@@ -9,14 +9,20 @@ import (
 )
 
 type ADBService struct {
-	client  *infra.ADBClient
-	monitor *state.ADBMonitor
+	adbClient *infra.ADBClient
+	ldClient  *infra.LDClient
+	monitor   *state.ADBMonitor
 }
 
-func NewADBService(client *infra.ADBClient, monitor *state.ADBMonitor) *ADBService {
+func NewADBService(
+	adbClient *infra.ADBClient,
+	ldClient *infra.LDClient,
+	monitor *state.ADBMonitor,
+) *ADBService {
 	return &ADBService{
-		client:  client,
-		monitor: monitor,
+		adbClient: adbClient,
+		ldClient:  ldClient,
+		monitor:   monitor,
 	}
 }
 
@@ -25,17 +31,15 @@ func (ser *ADBService) ScanDevices() error {
 	ser.monitor.SetScanning(true)
 	defer ser.monitor.SetScanning(false)
 
-	rawDevices, err := ser.client.GetDevices()
+	rawDevices, err := ser.adbClient.GetDevices()
 
 	if err != nil {
 		return fmt.Errorf("infra scan failed: %w", err)
 	}
 
-	ldNames := ser.client.GetLDPlayerNames()
-
 	for _, raw := range rawDevices {
-		model := ser.client.GetModel(raw.Serial)
-		name := ser.client.GetNameByMap(raw.Serial, ldNames)
+		model := ser.adbClient.GetModel(raw.Serial)
+		name := ser.ldClient.GetNameBySerial(raw.Serial)
 
 		device := &state.ADBDevice{
 			Serial: raw.Serial,

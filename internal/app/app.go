@@ -11,20 +11,21 @@ import (
 )
 
 type App struct {
-	monitor    *state.ADBMonitor
-	client     *infra.ADBClient
-	adbService *service.ADBService
+	monitor *state.ADBMonitor
+	service *service.ADBService
 }
 
 func NewApp() *App {
 	// Создаем зависимости один раз
+	adbClient := infra.NewADBClient()
+	ldClient := infra.NewLDClient(`G:\LDPlayer\LDPlayer9`)
 	monitor := state.NewADBMonitor()
-	client := infra.NewADBClient()
+
+	svc := service.NewADBService(adbClient, ldClient, monitor)
 
 	return &App{
-		monitor:    monitor,
-		client:     client,
-		adbService: service.NewADBService(client, monitor),
+		service: svc,
+		monitor: monitor,
 	}
 }
 
@@ -35,11 +36,11 @@ func (app *App) GetMonitor() *state.ADBMonitor {
 func (app *App) StartMonitoring() error {
 	fmt.Println("🚀 Запуск мониторинга...")
 
-	if err := app.adbService.ScanDevices(); err != nil {
+	if err := app.service.ScanDevices(); err != nil {
 		return fmt.Errorf("ошибка сканирования: %w", err)
 	}
 
-	app.adbService.StartPeriodicScan(5 * time.Second)
+	app.service.StartPeriodicScan(5 * time.Second)
 	fmt.Println("✅ Мониторинг запущен!")
 	return nil
 }
