@@ -26,18 +26,21 @@ func (ser *ADBService) ScanDevices() error {
 	defer ser.monitor.SetScanning(false)
 
 	rawDevices, err := ser.client.GetDevices()
+
 	if err != nil {
 		return fmt.Errorf("infra scan failed: %w", err)
 	}
 
-	// 2. Маппим и кладем в стейт
+	ldNames := ser.client.GetLDPlayerNames()
+
 	for _, raw := range rawDevices {
-		// Берем серийник (raw.Serial) и спрашиваем у клиента модель
 		model := ser.client.GetModel(raw.Serial)
+		name := ser.client.GetNameByMap(raw.Serial, ldNames)
 
 		device := &state.ADBDevice{
 			Serial: raw.Serial,
 			Status: mapStatus(raw.Status),
+			Name:   name,
 			Model:  model,
 		}
 

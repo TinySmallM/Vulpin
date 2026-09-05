@@ -20,6 +20,7 @@ const (
 type ADBDevice struct {
 	Serial   string       `json:"serial"`    // Серийный номер (уникальный ID)
 	Model    string       `json:"model"`     // Модель устройства
+	Name     string       `json:"name"`      // Имя эмулятора
 	Status   DeviceStatus `json:"status"`    // Статус подключения
 	LastSeen time.Time    `json:"last_seen"` // Последнее подключение
 }
